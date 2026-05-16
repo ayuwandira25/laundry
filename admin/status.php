@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
+$page_title = 'Status';
+$current_page = 'status';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['status'][] = [
         'nama_pelanggan' => $_POST['nama_pelanggan'] ?? '',
@@ -8,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Location: status.php');
     exit;
 }
-require_once __DIR__ . '/../header.php';
+require_once __DIR__ . '/../layouts/admin_header.php';
 ?>
 <section>
     <h2>Status Pengerjaan</h2>
@@ -47,4 +49,4 @@ require_once __DIR__ . '/../header.php';
         </table>
     <?php endif; ?>
 </section>
-<?php require_once __DIR__ . '/../footer.php'; ?>
+<?php require_once __DIR__ . '/../layouts/admin_footer.php'; ?>

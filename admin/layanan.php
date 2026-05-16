@@ -70,7 +70,7 @@ if ($result) {
     }
 }
 
-require_once __DIR__ . '/../header.php';
+require_once __DIR__ . '/../layouts/admin_header.php';
 ?>
 
 <style>
@@ -469,4 +469,4 @@ require_once __DIR__ . '/../header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../footer.php'; ?>
+<?php require_once __DIR__ . '/../layouts/admin_footer.php'; ?>

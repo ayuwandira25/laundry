@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
+$page_title = 'Pengeluaran';
+$current_page = 'pengeluaran';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['pengeluaran'][] = [
         'tanggal' => $_POST['tanggal'] ?? '',
@@ -9,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Location: pengeluaran.php');
     exit;
 }
-require_once __DIR__ . '/../header.php';
+require_once __DIR__ . '/../layouts/admin_header.php';
 ?>
 <section>
     <h2>Data Pengeluaran</h2>
@@ -47,4 +49,4 @@ require_once __DIR__ . '/../header.php';
         </table>
     <?php endif; ?>
 </section>
-<?php require_once __DIR__ . '/../footer.php'; ?>
+<?php require_once __DIR__ . '/../layouts/admin_footer.php'; ?>

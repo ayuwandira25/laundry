@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Location: transaksi.php');
     exit;
 }
-require_once __DIR__ . '/../header.php';
+require_once __DIR__ . '/../layouts/admin_header.php';
 ?>
 <section>
     <h2>Data Transaksi Laundry</h2>
@@ -47,4 +47,4 @@ require_once __DIR__ . '/../header.php';
         </table>
     <?php endif; ?>
 </section>
-<?php require_once __DIR__ . '/../footer.php'; ?>
+<?php require_once __DIR__ . '/../layouts/admin_footer.php'; ?>
