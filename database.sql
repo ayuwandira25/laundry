@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS pesanan (
     layanan_id INT,
     jumlah DECIMAL(10,2),
     jenis_item VARCHAR(255),
+    jenis_layanan VARCHAR(50),
     total_harga DECIMAL(10,2),
     tanggal_masuk TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tanggal_selesai DATE,

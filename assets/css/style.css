@@ -152,6 +152,10 @@ main {
   margin-left: 160px;
 }
 
+body.no-sidebar main {
+  margin-left: auto;
+}
+
 /* When main contains login page, adjust layout */
 main > .login-page-wrapper {
   margin: -24px;

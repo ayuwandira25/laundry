@@ -3,6 +3,7 @@ require_once __DIR__ . '/config.php';
 
 $is_logged_in = isset($_SESSION['user_id']) && isset($_SESSION['user_role']);
 $user_role = $_SESSION['user_role'] ?? '';
+$hide_sidebar = !empty($hide_sidebar);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -12,7 +13,7 @@ $user_role = $_SESSION['user_role'] ?? '';
     <title>Kyka Laundry</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body>
+<body class="<?php echo $hide_sidebar ? 'no-sidebar' : ''; ?>">
 <header>
     <div class="topbar">
         <h1>Kyka Laundry</h1>
@@ -21,7 +22,7 @@ $user_role = $_SESSION['user_role'] ?? '';
         <?php endif; ?>
     </div>
 </header>
-<?php if ($is_logged_in): ?>
+<?php if ($is_logged_in && !$hide_sidebar): ?>
 <nav>
     <a href="index.php">Beranda</a>
     <?php if ($user_role === 'admin'): ?>

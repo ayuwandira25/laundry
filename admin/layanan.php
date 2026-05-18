@@ -1,4 +1,6 @@
 <?php
+$page_title = 'Layanan';
+$current_page = 'layanan';
 require_once __DIR__ . '/../config.php';
 
 $action = $_GET['action'] ?? '';
@@ -105,7 +107,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
         border-radius: 8px;
         padding: 20px;
         margin-bottom: 30px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .form-section h2 {
@@ -218,7 +220,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
         border: 1px solid #ddd;
         border-radius: 8px;
         padding: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .table-section h2 {
@@ -314,7 +316,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
     <?php if ($message): ?>
         <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
     <?php endif; ?>
-    
+
     <?php if ($error): ?>
         <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
@@ -340,7 +342,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
 
                     <div class="form-group">
                         <label for="jenis_layanan">Jenis Layanan</label>
-                        
+
                         <!-- Dropdown untuk Kiloan -->
                         <select id="jenis_layanan_select" style="display: none;">
                             <option value="">-- Pilih Jenis --</option>
@@ -348,7 +350,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
                             <option value="Cuci Kering" <?php echo isSelected('Cuci Kering', $edit_data['jenis_layanan'] ?? old('jenis_layanan')); ?>>Cuci Kering</option>
                             <option value="Setrika Saja" <?php echo isSelected('Setrika Saja', $edit_data['jenis_layanan'] ?? old('jenis_layanan')); ?>>Setrika Saja</option>
                         </select>
-                        
+
                         <!-- Input text untuk Satuan -->
                         <input type="text" id="jenis_layanan_input" style="display: none;" value="<?php echo htmlspecialchars($edit_data['jenis_layanan'] ?? old('jenis_layanan')); ?>" placeholder="Masukkan jenis layanan (contoh: Baju Batik, Celana Panjang, dll)">
                     </div>
@@ -403,20 +405,20 @@ require_once __DIR__ . '/../layouts/admin_header.php';
                 // Validasi form sebelum submit
                 document.addEventListener('DOMContentLoaded', function() {
                     updateJenisLayanan();
-                    
+
                     const form = document.querySelector('form');
                     form.addEventListener('submit', function(e) {
                         const kategori = document.getElementById('kategori').value;
                         const selectField = document.getElementById('jenis_layanan_select');
                         const inputField = document.getElementById('jenis_layanan_input');
-                        
+
                         let jenisLayanan = '';
                         if (kategori === 'kiloan') {
                             jenisLayanan = selectField.value;
                         } else if (kategori === 'satuan') {
                             jenisLayanan = inputField.value;
                         }
-                        
+
                         if (!kategori || !jenisLayanan) {
                             e.preventDefault();
                             alert('Kategori dan Jenis Layanan harus diisi!');
@@ -444,13 +446,14 @@ require_once __DIR__ . '/../layouts/admin_header.php';
                             </tr>
                         </thead>
                         <tbody>
-                            <?php $no = 1; foreach ($layanan_list as $item): ?>
+                            <?php $no = 1;
+                            foreach ($layanan_list as $item): ?>
                                 <tr>
                                     <td><?php echo $no++; ?></td>
                                     <td><span class="badge badge-<?php echo $item['kategori']; ?>"><?php echo ucfirst($item['kategori']); ?></span></td>
                                     <td><?php echo htmlspecialchars($item['jenis_layanan']); ?></td>
                                     <td>
-                                        Rp <?php echo number_format($item['harga_reguler'], 0, ',', '.'); ?> / 
+                                        Rp <?php echo number_format($item['harga_reguler'], 0, ',', '.'); ?> /
                                         Rp <?php echo number_format($item['harga_express'], 0, ',', '.'); ?>
                                     </td>
                                     <td>

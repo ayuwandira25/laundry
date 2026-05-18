@@ -1,4 +1,6 @@
 <?php
+$page_title = 'Karyawan';
+$current_page = 'karyawan';
 require_once __DIR__ . '/../config.php';
 
 $action = $_GET['action'] ?? '';
@@ -103,7 +105,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
         border-radius: 8px;
         padding: 20px;
         margin-bottom: 30px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .form-section h2 {
@@ -203,7 +205,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
         border: 1px solid #ddd;
         border-radius: 8px;
         padding: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .table-section h2 {
@@ -277,7 +279,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
     <?php if ($message): ?>
         <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
     <?php endif; ?>
-    
+
     <?php if ($error): ?>
         <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
@@ -335,7 +337,8 @@ require_once __DIR__ . '/../layouts/admin_header.php';
                             </tr>
                         </thead>
                         <tbody>
-                            <?php $no = 1; foreach ($karyawan_list as $item): ?>
+                            <?php $no = 1;
+                            foreach ($karyawan_list as $item): ?>
                                 <tr>
                                     <td><?php echo $no++; ?></td>
                                     <td><?php echo htmlspecialchars($item['nama']); ?></td>

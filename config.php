@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Database connection
 $db = mysqli_connect("localhost", "root", "", "kykalaundry");
@@ -71,12 +73,12 @@ if (tableExists('karyawan')) {
 function insertData($table, $data)
 {
     global $db;
-    
+
     $columns = implode(", ", array_keys($data));
-    $values = "'" . implode("', '", array_map(function($val) use ($db) {
+    $values = "'" . implode("', '", array_map(function ($val) use ($db) {
         return mysqli_real_escape_string($db, $val);
     }, array_values($data))) . "'";
-    
+
     $sql = "INSERT INTO $table ($columns) VALUES ($values)";
     return mysqli_query($db, $sql);
 }
@@ -84,7 +86,14 @@ function insertData($table, $data)
 function getAllData($table)
 {
     global $db;
+    $table = mysqli_real_escape_string($db, $table);
     $result = mysqli_query($db, "SELECT * FROM $table");
+
+    if (!$result) {
+        error_log("Database Error in getAllData: " . mysqli_error($db));
+        return [];
+    }
+
     $data = [];
     while ($row = mysqli_fetch_assoc($result)) {
         $data[] = $row;
@@ -109,14 +118,14 @@ function updateData($table, $id, $data)
 {
     global $db;
     $id = mysqli_real_escape_string($db, $id);
-    
+
     $set = [];
     foreach ($data as $key => $val) {
         $key = mysqli_real_escape_string($db, $key);
         $val = mysqli_real_escape_string($db, $val);
         $set[] = "$key = '$val'";
     }
-    
+
     $sql = "UPDATE $table SET " . implode(", ", $set) . " WHERE id = $id";
     return mysqli_query($db, $sql);
 }
@@ -140,7 +149,7 @@ function getUserByEmailOrName($username)
 function registerUser($data)
 {
     global $db;
-    
+
     if (!tableExists('register')) {
         createTablesFromSql();
     }
@@ -152,7 +161,7 @@ function registerUser($data)
     $alamat = mysqli_real_escape_string($db, $data['alamat']);
     $password = mysqli_real_escape_string($db, $data['password']);
     $role = mysqli_real_escape_string($db, $data['role']);
-    
+
     $sql = "INSERT INTO register (email, nama, jenis_kelamin, no_hp, alamat, password, role) 
             VALUES ('$email', '$nama', '$jenis_kelamin', '$no_hp', '$alamat', '$password', '$role')";
     return mysqli_query($db, $sql);
@@ -191,7 +200,7 @@ function insertLoginHistory($user_id, $email, $nama, $role)
     $email = mysqli_real_escape_string($db, $email);
     $nama = mysqli_real_escape_string($db, $nama);
     $role = mysqli_real_escape_string($db, $role);
-    
+
     $sql = "INSERT INTO login (user_id, email, nama, role) VALUES ('$user_id', '$email', '$nama', '$role')";
     return mysqli_query($db, $sql);
 }

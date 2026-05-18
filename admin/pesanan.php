@@ -1,4 +1,6 @@
 <?php
+$page_title = 'Pesanan';
+$current_page = 'pesanan';
 require_once __DIR__ . '/../config.php';
 
 $action = $_GET['action'] ?? '';
@@ -67,7 +69,7 @@ if ($action === 'edit' && $id) {
 }
 
 // Get all pesanan with layanan info
-$result = mysqli_query($db, "SELECT p.*, pl.nama as nama_pelanggan, l.jenis_layanan, l.kategori FROM pesanan p 
+$result = mysqli_query($db, "SELECT p.*, pl.nama as nama_pelanggan, l.jenis_layanan as layanan_type, l.kategori FROM pesanan p 
     LEFT JOIN pelanggan pl ON p.pelanggan_id = pl.id 
     LEFT JOIN layanan l ON p.layanan_id = l.id 
     ORDER BY p.id DESC");
@@ -94,6 +96,24 @@ if ($result_layanan) {
     while ($row = mysqli_fetch_assoc($result_layanan)) {
         $layanan_dropdown[] = $row;
     }
+}
+
+function estimateFinishRange($tanggalMasuk, $jenis_layanan)
+{
+    if (empty($tanggalMasuk)) {
+        return '-';
+    }
+
+    $tanggal = DateTime::createFromFormat('Y-m-d H:i:s', $tanggalMasuk) ?: new DateTime($tanggalMasuk);
+    if (strtolower($jenis_layanan) === 'express') {
+        $min = (clone $tanggal)->modify('+1 day');
+        $max = (clone $tanggal)->modify('+2 days');
+        return $min->format('Y-m-d') . ' s/d ' . $max->format('Y-m-d') . ' (1-2 hari)';
+    }
+
+    $min = (clone $tanggal)->modify('+3 days');
+    $max = (clone $tanggal)->modify('+4 days');
+    return $min->format('Y-m-d') . ' s/d ' . $max->format('Y-m-d') . ' (3-4 hari)';
 }
 
 require_once __DIR__ . '/../layouts/admin_header.php';
@@ -131,7 +151,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
         border-radius: 8px;
         padding: 20px;
         margin-bottom: 30px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .form-section h2 {
@@ -247,7 +267,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
         border: 1px solid #ddd;
         border-radius: 8px;
         padding: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .table-section h2 {
@@ -349,7 +369,7 @@ require_once __DIR__ . '/../layouts/admin_header.php';
     <?php if ($message): ?>
         <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
     <?php endif; ?>
-    
+
     <?php if ($error): ?>
         <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
@@ -376,16 +396,26 @@ require_once __DIR__ . '/../layouts/admin_header.php';
                 </div>
 
                 <div class="form-group">
+                    <label for="kategori_layanan">Kategori Layanan</label>
+                    <select id="kategori_layanan" name="kategori_layanan" required onchange="filterLayanan()">
+                        <option value="">-- Pilih Kategori --</option>
+                        <option value="kiloan">Kiloan</option>
+                        <option value="satuan">Satuan</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="layanan_id">Pilih Layanan</label>
                     <select id="layanan_id" name="layanan_id" required onchange="updateHarga()">
                         <option value="">-- Pilih Layanan --</option>
                         <?php foreach ($layanan_dropdown as $layanan): ?>
-                            <option value="<?php echo $layanan['id']; ?>" 
+                            <option value="<?php echo $layanan['id']; ?>"
                                 data-harga-reguler="<?php echo $layanan['harga_reguler']; ?>"
                                 data-harga-express="<?php echo $layanan['harga_express']; ?>"
                                 data-kategori="<?php echo $layanan['kategori']; ?>"
+                                style="display: none;"
                                 <?php echo isSelected($layanan['id'], $edit_data['layanan_id'] ?? old('layanan_id')); ?>>
-                                <?php echo htmlspecialchars($layanan['jenis_layanan']); ?> (<?php echo ucfirst($layanan['kategori']); ?>)
+                                <?php echo htmlspecialchars($layanan['jenis_layanan']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -408,9 +438,9 @@ require_once __DIR__ . '/../layouts/admin_header.php';
                 </div>
 
                 <div class="form-group" id="jenis_item_group" style="display: none;">
-                    <label for="jenis_item">Jenis Item</label>
-                    <input type="text" id="jenis_item" name="jenis_item" value="<?php echo htmlspecialchars($edit_data['jenis_item'] ?? old('jenis_item')); ?>" placeholder="Contoh: Baju, Celana, Jas, Gamis, Badcover, dll">
-                    <div class="price-info">Masukkan jenis pakaian yang akan disetrika</div>
+                    <label for="jenis_item">Deskripsi Item</label>
+                    <input type="text" id="jenis_item" name="jenis_item" value="<?php echo htmlspecialchars($edit_data['jenis_item'] ?? old('jenis_item')); ?>" placeholder="Contoh: Jas, Gaun, Mukena, dll (opsional)">
+                    <div class="price-info">Catatan tambahan untuk pesanan</div>
                 </div>
 
                 <div class="form-group">
@@ -443,27 +473,38 @@ require_once __DIR__ . '/../layouts/admin_header.php';
                                 <th>No</th>
                                 <th>Pelanggan</th>
                                 <th>Layanan</th>
+                                <th>Tanggal Mulai</th>
+                                <th>Tanggal Selesai</th>
                                 <th>Jumlah</th>
+                                <th>Jenis Layanan</th>
                                 <th>Item / Paket</th>
                                 <th>Total Harga</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php $no = 1; foreach ($pesanan_list as $item): ?>
+                            <?php $no = 1;
+                            foreach ($pesanan_list as $item): ?>
                                 <tr>
                                     <td><?php echo $no++; ?></td>
                                     <td><?php echo htmlspecialchars($item['nama_pelanggan'] ?? 'N/A'); ?></td>
                                     <td>
-                                        <?php echo htmlspecialchars($item['jenis_layanan'] ?? 'N/A'); ?>
+                                        <?php echo htmlspecialchars($item['layanan_type'] ?? 'N/A'); ?>
                                         <?php if ($item['kategori']): ?>
                                             <br><span class="badge badge-<?php echo $item['kategori']; ?>"><?php echo ucfirst($item['kategori']); ?></span>
                                         <?php endif; ?>
                                     </td>
+                                    <td><?php echo htmlspecialchars($item['tanggal_masuk'] ?? '-'); ?></td>
+                                    <td><?php echo htmlspecialchars(estimateFinishRange($item['tanggal_masuk'] ?? '', $item['jenis_layanan'] ?? 'reguler')); ?></td>
                                     <td><?php echo $item['jumlah']; ?> <?php echo $item['kategori'] === 'kiloan' ? 'kg' : 'pcs'; ?></td>
                                     <td>
+                                        <span class="badge" style="background-color: <?php echo strtolower($item['jenis_layanan']) === 'express' ? '#ffc107' : '#17a2b8'; ?>; color: white; padding: 6px 10px; border-radius: 4px; font-weight: 500;">
+                                            <?php echo ucfirst($item['jenis_layanan'] ?? 'Reguler'); ?>
+                                        </span>
+                                    </td>
+                                    <td>
                                         <?php if ($item['kategori'] === 'kiloan'): ?>
-                                            <span class="badge" style="background-color: <?php echo $item['jenis_layanan'] === 'express' ? '#ffc107' : '#17a2b8'; ?>; color: white;"><?php echo ucfirst($item['jenis_layanan']); ?></span>
+                                            -
                                         <?php else: ?>
                                             <?php echo htmlspecialchars($item['jenis_item'] ?? '-'); ?>
                                         <?php endif; ?>
@@ -489,6 +530,36 @@ require_once __DIR__ . '/../layouts/admin_header.php';
     // Data layanan dari database
     const layananData = <?php echo json_encode($layanan_dropdown); ?>;
 
+    function filterLayanan() {
+        const kategoriSelect = document.getElementById('kategori_layanan');
+        const layananSelect = document.getElementById('layanan_id');
+        const selectedKategori = kategoriSelect.value.toLowerCase();
+
+        // Reset layanan_id
+        layananSelect.value = '';
+
+        // Filter options
+        const options = layananSelect.querySelectorAll('option');
+        options.forEach((option, index) => {
+            if (index === 0) {
+                // Show the first option (placeholder)
+                option.style.display = 'block';
+            } else {
+                const optionKategori = option.dataset.kategori;
+                if (optionKategori === selectedKategori) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+        });
+
+        // Clear price info
+        document.getElementById('hargaInfo').innerHTML = '';
+        document.getElementById('unitInfo').innerHTML = '';
+        document.getElementById('totalFormatted').innerHTML = '';
+    }
+
     function updateHarga() {
         const layananId = document.getElementById('layanan_id').value;
         const jumlahInput = document.getElementById('jumlah');
@@ -510,31 +581,24 @@ require_once __DIR__ . '/../layouts/admin_header.php';
             const kategoriText = kategori === 'kiloan' ? 'kg' : 'pcs';
             unitLabel.textContent = kategoriText;
             jumlahInput.placeholder = `Contoh: ${kategori === 'kiloan' ? '2.5' : '5'}`;
-            
-            // Show/hide jenis_layanan group (hanya untuk kiloan)
-            if (kategori === 'kiloan') {
+
+            // Show/hide jenis_layanan group (untuk kiloan dan satuan)
+            if (kategori === 'kiloan' || kategori === 'satuan') {
                 jenis_layanan_group.style.display = 'block';
                 jenis_layanan_select.required = true;
                 unitInfo.innerHTML = `<strong>Harga Reguler: Rp ${new Intl.NumberFormat('id-ID').format(hargaReguler)} / ${kategoriText}</strong><br><strong>Harga Express: Rp ${new Intl.NumberFormat('id-ID').format(hargaExpress)} / ${kategoriText}</strong>`;
-                hargaInfo.innerHTML = `<strong>Layanan Kiloan</strong>`;
-            } else {
-                jenis_layanan_group.style.display = 'none';
-                jenis_layanan_select.required = false;
-                jenis_layanan_select.value = 'reguler';
-                unitInfo.innerHTML = `<strong>Harga: Rp ${new Intl.NumberFormat('id-ID').format(hargaReguler)} / ${kategoriText}</strong>`;
-                hargaInfo.innerHTML = `<strong>Layanan Satuan</strong>`;
+                if (kategori === 'kiloan') {
+                    hargaInfo.innerHTML = `<strong>Layanan Kiloan</strong>`;
+                } else {
+                    hargaInfo.innerHTML = `<strong>Layanan Satuan</strong>`;
+                }
             }
-            
-            // Show/hide jenis_item group
-            if (kategori === 'satuan') {
-                jenis_item_group.style.display = 'block';
-                jenis_item_input.required = true;
-            } else {
-                jenis_item_group.style.display = 'none';
-                jenis_item_input.required = false;
-                jenis_item_input.value = '';
-            }
-            
+
+            // Jangan tampilkan jenis_item group untuk satuan maupun kiloan
+            jenis_item_group.style.display = 'none';
+            jenis_item_input.required = false;
+            jenis_item_input.value = '';
+
             hitungTotal();
         }
     }
@@ -551,11 +615,11 @@ require_once __DIR__ . '/../layouts/admin_header.php';
             const selectedOption = document.querySelector(`#layanan_id option[value="${layananId}"]`);
             const hargaReguler = parseFloat(selectedOption.dataset.hargaReguler);
             const hargaExpress = parseFloat(selectedOption.dataset.hargaExpress);
-            
+
             // Pilih harga berdasarkan jenis layanan
             let hargaFinal = jenis_layanan === 'express' ? hargaExpress : hargaReguler;
             const total = hargaFinal * jumlah;
-            
+
             totalInput.value = total;
             totalFormatted.innerHTML = `<strong>Rp ${new Intl.NumberFormat('id-ID').format(total)}</strong>`;
             jenisLayananInfo.innerHTML = `<strong style="color: #007bff;">Tipe: ${jenis_layanan.toUpperCase()}</strong>`;
@@ -568,6 +632,19 @@ require_once __DIR__ . '/../layouts/admin_header.php';
 
     // Initialize on page load
     window.addEventListener('load', function() {
+        const layananSelect = document.getElementById('layanan_id');
+        const kategoriSelect = document.getElementById('kategori_layanan');
+
+        // If editing and layanan is already selected, set kategori accordingly
+        if (layananSelect.value) {
+            const selectedOption = layananSelect.querySelector(`option[value="${layananSelect.value}"]`);
+            if (selectedOption) {
+                const kategori = selectedOption.dataset.kategori;
+                kategoriSelect.value = kategori;
+                filterLayanan();
+            }
+        }
+
         updateHarga();
     });
 </script>
